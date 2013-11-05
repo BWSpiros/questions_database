@@ -25,17 +25,29 @@ class DatabaseThings
   end
 
   def create
-    raise "already saved!" unless self.id.nil?
-    qs = (["?"]*self.cols.size).join(", ")
+    qs = (["?"]*self.cols.split(', ').size).join(", ")
+    set_string = self.cols.split(", ").map.with_index{|c, i| c.to_s + "='" + self.params[i].to_s+"'" }.join(", ")
+    p set_string
 
-    QuestionsDatabase.instance.execute(<<-SQL, #{self.cols})
-      INSERT INTO
-        questions (#{self.cols})
-      VALUES
-        (#{qs})
-    SQL
+    if self.id.nil?
+      QuestionsDatabase.instance.execute(<<-SQL, *self.params)
+        INSERT INTO
+          #{self.class.to_s.downcase}s (#{self.cols})
+        VALUES
+          (#{qs})
+      SQL
 
-    @id = QuestionsDatabase.instance.last_insert_row_id
+      @id = QuestionsDatabase.instance.last_insert_row_id
+    else
+      QuestionsDatabase.instance.execute(<<-SQL)
+        UPDATE
+          #{self.class.to_s.downcase}s
+        SET
+        #{ set_string }
+        WHERE
+          id = #{self.id}
+      SQL
+    end
   end
 end
 
@@ -51,12 +63,18 @@ class User < DatabaseThings
   end
 
   attr_accessor :id, :fname, :lname
+  attr_reader :cols
 
   def initialize(options = {})
     @id = options["id"]
     @fname = options["fname"]
     @lname = options["lname"]
-    @cols = "fname, lname"
+    @cols = 'fname, lname'
+
+  end
+
+  def params
+    [@fname, @lname]
   end
 
   def authored_questions
@@ -108,6 +126,7 @@ class Question < DatabaseThings
     @body = options["body"]
     @author_id = options["author"]
     @cols = "title, body, author"
+    @params = [@title, @body, @author]
   end
 
   def author
@@ -157,6 +176,7 @@ class Question_Follower < DatabaseThings
     @question_id = options["question_id"]
     @user_id = options["user_id"]
     @cols = "question_id, user_id"
+    @params = [@question_id, @user_id]
   end
 end
 
@@ -183,6 +203,7 @@ class Replie < DatabaseThings
     @question = options["question"]
     @user = options["user"]
     @cols = "body, parent, question, user"
+    @params = [@body, @parent, @question, @user]
   end
 
   def author
@@ -245,5 +266,6 @@ class Question_Like < DatabaseThings
     @question = options["question"]
     @user = options["user"]
     @cols = "body, parent, question, user"
+    @params = [@body, @parent, @question, @user]
   end
 end
