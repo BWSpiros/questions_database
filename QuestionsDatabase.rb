@@ -24,6 +24,7 @@ class DatabaseThings
     results.map { |result| self.new(result) }
   end
 
+
 end
 
 class User < DatabaseThings
@@ -68,6 +69,16 @@ class User < DatabaseThings
 
   def followed_questions
     QuestionFollower.followed_questions_for_user_id(self.id)
+  end
+
+  def average_karma
+    results = QuestionsDatabase.instance.execute(
+    "SELECT AVG(x.MyCount)
+    FROM(SELECT COUNT(*) AS MyCount FROM question_likes
+    WHERE question_likes.user_id = #{id} GROUP BY question_id) X
+    ")
+
+    results.first.values.first
   end
 end
 
