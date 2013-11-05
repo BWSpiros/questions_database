@@ -27,7 +27,6 @@ class DatabaseThings
   def create
     qs = (["?"]*self.cols.split(', ').size).join(", ")
     set_string = self.cols.split(", ").map.with_index{|c, i| c.to_s + "='" + self.params[i].to_s+"'" }.join(", ")
-    p set_string
 
     if self.id.nil?
       QuestionsDatabase.instance.execute(<<-SQL, *self.params)
