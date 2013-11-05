@@ -284,3 +284,6 @@ class Question_Like < DatabaseThings
     @id = QuestionsDatabase.instance.last_insert_row_id
   end
 end
+
+
+#
