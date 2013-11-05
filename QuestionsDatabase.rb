@@ -24,7 +24,19 @@ class DatabaseThings
     results.map { |result| self.new(result) }
   end
 
+  def create
+    raise "already saved!" unless self.id.nil?
+    qs = (["?"]*self.cols.size).join(", ")
 
+    QuestionsDatabase.instance.execute(<<-SQL, #{self.cols})
+      INSERT INTO
+        questions (#{self.cols})
+      VALUES
+        (#{qs})
+    SQL
+
+    @id = QuestionsDatabase.instance.last_insert_row_id
+  end
 end
 
 class User < DatabaseThings
@@ -44,19 +56,7 @@ class User < DatabaseThings
     @id = options["id"]
     @fname = options["fname"]
     @lname = options["lname"]
-  end
-
-  def create
-    raise "already saved!" unless self.id.nil?
-
-    QuestionsDatabase.instance.execute(<<-SQL, fname, lname)
-      INSERT INTO
-        questions (fname, lname)
-      VALUES
-        (?)
-    SQL
-
-    @id = QuestionsDatabase.instance.last_insert_row_id
+    @cols = "fname, lname"
   end
 
   def authored_questions
@@ -107,19 +107,7 @@ class Question < DatabaseThings
     @title = options["title"]
     @body = options["body"]
     @author_id = options["author"]
-  end
-
-  def create
-    raise "already saved!" unless self.id.nil?
-
-    QuestionsDatabase.instance.execute(<<-SQL, title, body, author)
-      INSERT INTO
-        questions (title, body, author)
-      VALUES
-        (?)
-    SQL
-
-    @id = QuestionsDatabase.instance.last_insert_row_id
+    @cols = "title, body, author"
   end
 
   def author
@@ -168,19 +156,7 @@ class Question_Follower < DatabaseThings
     @id = options["id"]
     @question_id = options["question_id"]
     @user_id = options["user_id"]
-  end
-
-  def create
-    raise "already saved!" unless self.id.nil?
-
-    QuestionsDatabase.instance.execute(<<-SQL, question_id, user_id)
-      INSERT INTO
-        questions (question_id, user_id)
-      VALUES
-        (?)
-    SQL
-
-    @id = QuestionsDatabase.instance.last_insert_row_id
+    @cols = "question_id, user_id"
   end
 end
 
@@ -206,19 +182,7 @@ class Replie < DatabaseThings
     @parent = options["parent"]
     @question = options["question"]
     @user = options["user"]
-  end
-
-  def create
-    raise "already saved!" unless self.id.nil?
-
-    QuestionsDatabase.instance.execute(<<-SQL, body, parent, question, user)
-      INSERT INTO
-        questions (body, parent, question, user)
-      VALUES
-        (?)
-    SQL
-
-    @id = QuestionsDatabase.instance.last_insert_row_id
+    @cols = "body, parent, question, user"
   end
 
   def author
@@ -280,21 +244,6 @@ class Question_Like < DatabaseThings
     @likes = options ["likes"]
     @question = options["question"]
     @user = options["user"]
-  end
-
-  def create
-    raise "already saved!" unless self.id.nil?
-
-    QuestionsDatabase.instance.execute(<<-SQL, body, parent, question, user)
-      INSERT INTO
-        questions (body, parent, question, user)
-      VALUES
-        (?)
-    SQL
-
-    @id = QuestionsDatabase.instance.last_insert_row_id
+    @cols = "body, parent, question, user"
   end
 end
-
-
-#
